@@ -114,7 +114,8 @@ app.post('/api/submit-preauth', async (req, res) => {
         treatmentType: formData.treatmentType,
         estimatedAmount: formData.estimatedAmount,
         email: formData.email,
-        mobile: formData.mobile
+        mobile: formData.mobile,
+        doctorNotes: formData.doctorNotes
       }, {
         headers: { 'Content-Type': 'application/json' }
       });
