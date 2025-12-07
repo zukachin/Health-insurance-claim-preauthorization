@@ -2,7 +2,6 @@
   "version": 2,
   "buildCommand": "cd frontend/frontend && npm install && npm run build",
   "outputDirectory": "frontend/frontend/dist",
-  "public": "frontend/frontend/public",
   "headers": [
     {
       "source": "/(.*)",
