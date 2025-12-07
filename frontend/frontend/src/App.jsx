@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'https://health-insurance-claim-preauthoriza-five.vercel.app/';
+const API_URL = 'https://health-insurance-claim-preauthoriza-five.vercel.app';
 
 export default function PreAuthForm() {
   const [step, setStep] = useState('form');
@@ -133,7 +133,7 @@ export default function PreAuthForm() {
     setError('');
 
     try {
-      const response = await fetch(`${API_URL}/send-otp`, {
+      const response = await fetch(`${API_URL}/api/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,7 +163,7 @@ export default function PreAuthForm() {
     setError('');
 
     try {
-      const verifyResponse = await fetch(`${API_URL}/verify-otp`, {
+      const verifyResponse = await fetch(`${API_URL}/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -187,7 +187,7 @@ export default function PreAuthForm() {
           doctorNotes: formData.doctorNotes
         };
 
-        const submitResponse = await fetch(`${API_URL}/submit-preauth`, {
+        const submitResponse = await fetch(`${API_URL}/api/submit-preauth`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(finalData)
@@ -217,7 +217,7 @@ export default function PreAuthForm() {
     setOtp('');
 
     try {
-      const response = await fetch(`${API_URL}/send-otp`, {
+      const response = await fetch(`${API_URL}/api/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
