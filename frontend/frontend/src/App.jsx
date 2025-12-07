@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://health-insurance-claim-preauthoriza-five.vercel.app/';
 
 export default function PreAuthForm() {
   const [step, setStep] = useState('form');
@@ -11,7 +11,7 @@ export default function PreAuthForm() {
   const [formData, setFormData] = useState({
     patientName: '',
     email: '',
-    phoneNumber: '',
+    mobile: '',
     hospitalName: '',
     hospitalNameOther: '',
     policyPrefix: '',
