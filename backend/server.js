@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// OTP store (for development; use DB or Redis in production)
+// OTP store (for dev; use DB or Redis in production)
 const otpStore = new Map();
 
 // Configure email transporter (Gmail example)
@@ -34,7 +34,7 @@ app.post('/api/send-otp', async (req, res) => {
     if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
     const otp = generateOTP();
-    otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+    otpStore.set(email, { otp, verified: false, expiresAt: Date.now() + 10 * 60 * 1000 });
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -66,24 +66,42 @@ app.post('/api/send-otp', async (req, res) => {
 // -------------------- VERIFY OTP --------------------
 app.post('/api/verify-otp', (req, res) => {
   const { email, otp } = req.body;
-  if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and OTP required' });
+  if (!email || !otp) return res.status(400).json({ success: false, otpVerified: false, message: 'Email and OTP required' });
 
   const stored = otpStore.get(email);
-  if (!stored) return res.status(400).json({ success: false, message: 'OTP not found or expired' });
+  if (!stored) return res.status(400).json({ success: false, otpVerified: false, message: 'OTP not found or expired' });
+
   if (Date.now() > stored.expiresAt) {
     otpStore.delete(email);
-    return res.status(400).json({ success: false, message: 'OTP expired' });
+    return res.status(400).json({ success: false, otpVerified: false, message: 'OTP expired' });
   }
-  if (stored.otp !== otp) return res.status(400).json({ success: false, message: 'Invalid OTP' });
 
-  otpStore.delete(email);
-  res.json({ success: true, message: 'Email verified successfully' });
+  if (stored.otp !== otp) return res.status(400).json({ success: false, otpVerified: false, message: 'Invalid OTP' });
+
+  // mark verified instead of deleting
+  stored.verified = true;
+  otpStore.set(email, stored);
+
+  res.json({ success: true, otpVerified: true, message: 'Email verified successfully' });
 });
 
 // -------------------- SUBMIT PRE-AUTH FORM --------------------
 app.post('/api/submit-preauth', async (req, res) => {
   try {
     const formData = req.body;
+    const record = otpStore.get(formData.email);
+
+    // Check OTP verification
+    if (!record || !record.verified) {
+      return res.status(403).json({
+        success: false,
+        otpVerified: false,
+        message: 'Email not verified. Please verify OTP before submitting.'
+      });
+    }
+
+    // Delete OTP record after successful submission
+    otpStore.delete(formData.email);
 
     // --- Save to DB here if needed ---
     console.log('Pre-authorization submitted:', formData);
@@ -116,15 +134,14 @@ app.post('/api/submit-preauth', async (req, res) => {
         email: formData.email,
         mobile: formData.mobile,
         doctorNotes: formData.doctorNotes
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { headers: { 'Content-Type': 'application/json' } });
+
       console.log('Claim sent to Power Automate successfully');
     } catch (err) {
       console.error('Failed to send claim to Power Automate:', err.message);
     }
 
-    res.json({ success: true, message: 'Pre-authorization submitted successfully' });
+    res.json({ success: true, otpVerified: true, message: 'Pre-authorization submitted successfully' });
 
   } catch (error) {
     console.error('Error submitting form:', error);
